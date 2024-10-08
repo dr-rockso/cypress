@@ -1,4 +1,4 @@
-import { action } from 'mobx'
+import { action, makeObservable } from 'mobx'
 import { observer } from 'mobx-react'
 import React, { Component } from 'react'
 
@@ -6,15 +6,20 @@ interface Props {
   value: boolean
   size?: 'sm' | 'md' | 'lg' | 'xl'
   'data-cy'?: string
-  onUpdate: (e: MouseEvent) => void
+  onUpdate: (e: React.MouseEvent<HTMLButtonElement>) => void
 }
 
 @observer
 class Switch extends Component<Props> {
-  @action _onClick = (e: MouseEvent) => {
+  @action _onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const { onUpdate } = this.props
 
     onUpdate(e)
+  }
+
+  constructor (props: Props) {
+    super(props)
+    makeObservable(this)
   }
 
   render () {

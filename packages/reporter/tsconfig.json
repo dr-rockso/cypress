@@ -7,6 +7,8 @@
       "cypress-real-events"
     ], /* Type declaration files to be included in compilation. */
     "importsNotUsedAsValues": "remove",
+    "useDefineForClassFields": true,
+    "experimentalDecorators": true,
     "lib": ["DOM"]
   },
   "include": [
