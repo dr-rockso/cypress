@@ -1,6 +1,6 @@
 require('../spec_helper')
 
-import { RemoteStates } from '../../lib/remote_states'
+import { RemoteStates } from '../../lib/remote-states/remote_states'
 
 describe('remote states', () => {
   beforeEach(function () {

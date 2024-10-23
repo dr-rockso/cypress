@@ -5,7 +5,7 @@ import sinon from 'sinon'
 import { testMiddleware } from './helpers'
 import { CypressIncomingRequest, CypressOutgoingResponse } from '../../../lib'
 import { HttpBuffer, HttpBuffers } from '../../../lib/http/util/buffers'
-import { RemoteStates } from '@packages/server/lib/remote_states'
+import { RemoteStates } from '@packages/server/lib/remote-states/remote_states'
 import { CookieJar } from '@packages/server/lib/util/cookies'
 import { HttpMiddlewareThis } from '../../../lib/http'
 

@@ -11,7 +11,7 @@ import { expect } from 'chai'
 import supertest from 'supertest'
 import { allowDestroy } from '@packages/network'
 import { EventEmitter } from 'events'
-import { RemoteStates } from '@packages/server/lib/remote_states'
+import { RemoteStates } from '@packages/server/lib/remote-states/remote_states'
 import { CookieJar } from '@packages/server/lib/util/cookies'
 
 const Request = require('@packages/server/lib/request')
