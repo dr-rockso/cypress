@@ -646,18 +646,6 @@ describe('lib/cors', () => {
     })
   })
 
-  context('.getOrigin', () => {
-    it('ports', () => {
-      expect(cors.getOrigin('https://example.com')).to.equal('https://example.com')
-      expect(cors.getOrigin('http://example.com:8080')).to.equal('http://example.com:8080')
-    })
-
-    it('subdomain', () => {
-      expect(cors.getOrigin('http://www.example.com')).to.equal('http://www.example.com')
-      expect(cors.getOrigin('http://www.app.herokuapp.com:8080')).to.equal('http://www.app.herokuapp.com:8080')
-    })
-  })
-
   context('.policyForDomain', () => {
     const recommendedSameOriginPolicyUrlGlobs = ['*.salesforce.com', '*.force.com', '*.google.com', 'google.com']
 

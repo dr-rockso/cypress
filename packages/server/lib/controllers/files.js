@@ -57,7 +57,7 @@ module.exports = {
       cors.getSuperDomain(req.proxiedUrl) :
       undefined
 
-    const origin = cors.getOrigin(req.proxiedUrl)
+    const { origin } = new URL(req.proxiedUrl)
 
     const privilegedChannel = await privilegedCommandsManager.getPrivilegedChannel({
       browserFamily: req.query.browserFamily,

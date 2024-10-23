@@ -24,7 +24,6 @@ import { telemetry } from '@packages/telemetry'
 import type { Socket } from '@packages/socket'
 
 import type { RunState, CachedTestState, ProtocolManagerShape } from '@packages/types'
-import { cors } from '@packages/network'
 import memory from './browsers/memory'
 import { privilegedCommandsManager } from './privileged-commands/privileged-commands-manager'
 
@@ -376,9 +375,9 @@ export class SocketBase {
         })
 
         const setCrossOriginCookie = ({ cookie, url, sameSiteContext }: { cookie: SerializableAutomationCookie, url: string, sameSiteContext: SameSiteContext }) => {
-          const domain = cors.getOrigin(url)
+          const { origin } = new URL(url)
 
-          cookieJar.setCookie(automationCookieToToughCookie(cookie, domain), url, sameSiteContext)
+          cookieJar.setCookie(automationCookieToToughCookie(cookie, origin), url, sameSiteContext)
         }
 
         socket.on('dev-server:on-spec-update', async (spec: Cypress.Spec) => {

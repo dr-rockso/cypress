@@ -253,15 +253,6 @@ export function urlMatchesOriginProtectionSpace (urlStr, origin) {
   return _.startsWith(normalizedUrl, normalizedOrigin)
 }
 
-export function getOrigin (url: string) {
-  // @ts-ignore
-  const { origin } = new URL(url)
-
-  // origin is comprised of:
-  // protocol + subdomain + superdomain + port
-  return origin
-}
-
 /**
  * Returns the super-domain of a URL
  *
