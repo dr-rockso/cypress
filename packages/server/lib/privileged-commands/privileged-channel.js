@@ -68,6 +68,8 @@
       )
     })
 
+    //console.log('hasSpecFrameStackLines? ', err.stack, stackLines, filteredLines, filteredLines.length)
+
     return filteredLines.length > 0
   }
 
@@ -131,7 +133,7 @@
     if (browserFamily === 'chromium' && documentDomainContext) {
       //console.log('checking special case', browserFamily, documentDomainContext, browserFamily && documentDomainContext)
 
-      return hasStackLinesFromSpecOrSupportFile(err) || hasSpecFrameStackLines
+      return hasStackLinesFromSpecOrSupportFile(err) || hasSpecFrameStackLines(err)
     }
 
     return hasCallbackInsideEval(err) || hasStackLinesFromSpecOrSupportFile(err)
