@@ -5,11 +5,25 @@ import sinon from 'sinon'
 import { testMiddleware } from './helpers'
 import { CypressIncomingRequest, CypressOutgoingResponse } from '../../../lib'
 import { HttpBuffer, HttpBuffers } from '../../../lib/http/util/buffers'
-import { RemoteStates } from '@packages/server/lib/remote-states/remote_states'
+import { RemoteStates } from '@packages/server/lib/remote_states'
 import { CookieJar } from '@packages/server/lib/util/cookies'
 import { HttpMiddlewareThis } from '../../../lib/http'
 
 describe('http/request-middleware', () => {
+  const serverPort = 3030
+  const fileServerPort = 3030
+  const originKeyStrategy = (url) => new URL(url).origin
+
+  const remoteStateConfig = () => {
+    return { serverPort, fileServerPort }
+  }
+
+  let remoteStates: RemoteStates
+
+  beforeEach(() => {
+    remoteStates = new RemoteStates(remoteStateConfig, originKeyStrategy)
+  })
+
   it('exports the members in the correct order', () => {
     expect(_.keys(RequestMiddleware)).to.have.ordered.members([
       'LogRequest',
@@ -615,7 +629,6 @@ describe('http/request-middleware', () => {
 
     it('adds auth header from remote state', async () => {
       const headers = {}
-      const remoteStates = new RemoteStates(() => {})
 
       remoteStates.set('https://www.cypress.io/', { auth: { username: 'u', password: 'p' } })
 
@@ -641,7 +654,6 @@ describe('http/request-middleware', () => {
 
     it('does not add auth header if origins do not match', async () => {
       const headers = {}
-      const remoteStates = new RemoteStates(() => {})
 
       remoteStates.set('https://cypress.io/', { auth: { username: 'u', password: 'p' } }) // does not match due to subdomain
 
@@ -665,7 +677,6 @@ describe('http/request-middleware', () => {
 
     it('does not add auth header if remote does not have auth', async () => {
       const headers = {}
-      const remoteStates = new RemoteStates(() => {})
 
       remoteStates.set('https://www.cypress.io/')
 
@@ -689,7 +700,6 @@ describe('http/request-middleware', () => {
 
     it('does not add auth header if remote not found', async () => {
       const headers = {}
-      const remoteStates = new RemoteStates(() => {})
 
       remoteStates.set('http://localhost:3500', { auth: { username: 'u', password: 'p' } })
 
@@ -715,7 +725,6 @@ describe('http/request-middleware', () => {
       const headers = {
         authorization: 'token',
       }
-      const remoteStates = new RemoteStates(() => {})
 
       remoteStates.set('https://www.cypress.io/', { auth: { username: 'u', password: 'p' } })
 
@@ -847,7 +856,6 @@ describe('http/request-middleware', () => {
 
     beforeEach(() => {
       const headers = {}
-      const remoteStates = new RemoteStates(() => {})
 
       ctx = {
         onError: sinon.stub(),

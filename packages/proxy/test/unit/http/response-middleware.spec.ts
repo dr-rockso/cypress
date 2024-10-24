@@ -4,13 +4,27 @@ import { debugVerbose } from '../../../lib/http'
 import { expect } from 'chai'
 import sinon from 'sinon'
 import { testMiddleware } from './helpers'
-import { RemoteStates } from '@packages/server/lib/remote-states/remote_states'
+import { RemoteStates } from '@packages/server/lib/remote_states'
 import { Readable } from 'stream'
 import * as rewriter from '../../../lib/http/util/rewriter'
 import { nonceDirectives, problematicCspDirectives, unsupportedCSPDirectives } from '../../../lib/http/util/csp-header'
 import * as serviceWorkerInjector from '../../../lib/http/util/service-worker-injector'
 
 describe('http/response-middleware', function () {
+  const serverPort = 3030
+  const fileServerPort = 3030
+  const originKeyStrategy = (url) => new URL(url).origin
+
+  const remoteStateConfig = () => {
+    return { serverPort, fileServerPort }
+  }
+
+  let remoteStates: RemoteStates
+
+  beforeEach(() => {
+    remoteStates = new RemoteStates(remoteStateConfig, originKeyStrategy)
+  })
+
   it('exports the members in the correct order', function () {
     expect(_.keys(ResponseMiddleware)).to.have.ordered.members([
       'LogResponse',
@@ -1119,8 +1133,6 @@ describe('http/response-middleware', function () {
     })
 
     function prepareContext (props) {
-      const remoteStates = new RemoteStates(() => {})
-
       // set the primary remote state
       remoteStates.set('http://127.0.0.1:3501')
 
@@ -1875,8 +1887,6 @@ describe('http/response-middleware', function () {
     })
 
     function prepareContext (props) {
-      const remoteStates = new RemoteStates(() => {})
-
       // set the primary remote state
       remoteStates.set('http://foobar.com')
 
@@ -2115,125 +2125,104 @@ describe('http/response-middleware', function () {
       htmlStub.restore()
     })
 
-    it('modifyObstructiveThirdPartyCode is true for secondary requests', function () {
-      prepareContext({
-        req: {
-          proxiedUrl: 'http://www.foobar.com:3501/primary-origin.html',
-        },
-        simulatedCookies: [],
-      })
+    ;[true, false].forEach((injectDocumentDomain) => {
+      describe(`when injectDocumentDomain is ${injectDocumentDomain}`, () => {
+        const config = {
+          modifyObstructiveCode: true,
+          experimentalModifyObstructiveThirdPartyCode: true,
+          injectDocumentDomain,
+        }
 
-      return testMiddleware([MaybeInjectHtml], ctx)
-      .then(() => {
-        expect(htmlStub).to.be.calledOnce
-        expect(htmlStub).to.be.calledWith('foo', {
-          'cspNonce': undefined,
-          'deferSourceMapRewrite': undefined,
-          'domainName': 'foobar.com',
-          'isNotJavascript': true,
-          'modifyObstructiveCode': true,
-          'modifyObstructiveThirdPartyCode': true,
-          'shouldInjectDocumentDomain': true,
-          'url': 'http://www.foobar.com:3501/primary-origin.html',
-          'useAstSourceRewriting': undefined,
-          'wantsInjection': 'full',
-          'wantsSecurityRemoved': true,
-          'simulatedCookies': [],
+        it('modifyObstructiveThirdPartyCode is true for secondary requests', function () {
+          prepareContext({
+            req: {
+              proxiedUrl: 'http://www.foobar.com:3501/primary-origin.html',
+            },
+            config,
+            simulatedCookies: [],
+          })
+
+          return testMiddleware([MaybeInjectHtml], ctx)
+          .then(() => {
+            expect(htmlStub).to.be.calledOnce
+            expect(htmlStub).to.be.calledWith('foo', {
+              'cspNonce': undefined,
+              'deferSourceMapRewrite': undefined,
+              'domainName': 'foobar.com',
+              'isNotJavascript': true,
+              'modifyObstructiveCode': true,
+              'modifyObstructiveThirdPartyCode': true,
+              'shouldInjectDocumentDomain': injectDocumentDomain,
+              'url': 'http://www.foobar.com:3501/primary-origin.html',
+              'useAstSourceRewriting': undefined,
+              'wantsInjection': 'full',
+              'wantsSecurityRemoved': true,
+              'simulatedCookies': [],
+            })
+          })
         })
-      })
-    })
 
-    it('modifyObstructiveThirdPartyCode is false for primary requests', function () {
-      prepareContext({
-        simulatedCookies: [],
-      })
+        it('modifyObstructiveThirdPartyCode is false for primary requests', function () {
+          prepareContext({
+            simulatedCookies: [],
+            config,
+          })
 
-      return testMiddleware([MaybeInjectHtml], ctx)
-      .then(() => {
-        expect(htmlStub).to.be.calledOnce
-        expect(htmlStub).to.be.calledWith('foo', {
-          'cspNonce': undefined,
-          'deferSourceMapRewrite': undefined,
-          'domainName': '127.0.0.1',
-          'isNotJavascript': true,
-          'modifyObstructiveCode': true,
-          'modifyObstructiveThirdPartyCode': false,
-          'shouldInjectDocumentDomain': true,
-          'url': 'http://127.0.0.1:3501/primary-origin.html',
-          'useAstSourceRewriting': undefined,
-          'wantsInjection': 'full',
-          'wantsSecurityRemoved': true,
-          'simulatedCookies': [],
+          return testMiddleware([MaybeInjectHtml], ctx)
+          .then(() => {
+            expect(htmlStub).to.be.calledOnce
+            expect(htmlStub).to.be.calledWith('foo', {
+              'cspNonce': undefined,
+              'deferSourceMapRewrite': undefined,
+              'domainName': '127.0.0.1',
+              'isNotJavascript': true,
+              'modifyObstructiveCode': true,
+              'modifyObstructiveThirdPartyCode': false,
+              'shouldInjectDocumentDomain': injectDocumentDomain,
+              'url': 'http://127.0.0.1:3501/primary-origin.html',
+              'useAstSourceRewriting': undefined,
+              'wantsInjection': 'full',
+              'wantsSecurityRemoved': true,
+              'simulatedCookies': [],
+            })
+          })
         })
-      })
-    })
 
-    it('modifyObstructiveThirdPartyCode is false when experimental flag is false', function () {
-      prepareContext({
-        req: {
-          proxiedUrl: 'http://www.foobar.com:3501/primary-origin.html',
-        },
-        config: {
-          modifyObstructiveCode: false,
-          experimentalModifyObstructiveThirdPartyCode: false,
-          experimentalSkipDomainInjection: null,
-        },
-        simulatedCookies: [],
-      })
+        it('cspNonce is set to the value stored in res.injectionNonce', function () {
+          prepareContext({
+            req: {
+              proxiedUrl: 'http://www.foobar.com:3501/primary-origin.html',
+            },
+            config,
+            res: {
+              injectionNonce: 'fake-nonce',
+            },
+            simulatedCookies: [],
+          })
 
-      return testMiddleware([MaybeInjectHtml], ctx)
-      .then(() => {
-        expect(htmlStub).to.be.calledOnce
-        expect(htmlStub).to.be.calledWith('foo', {
-          'cspNonce': undefined,
-          'deferSourceMapRewrite': undefined,
-          'domainName': 'foobar.com',
-          'isNotJavascript': true,
-          'modifyObstructiveCode': false,
-          'modifyObstructiveThirdPartyCode': false,
-          'shouldInjectDocumentDomain': true,
-          'url': 'http://www.foobar.com:3501/primary-origin.html',
-          'useAstSourceRewriting': undefined,
-          'wantsInjection': 'full',
-          'wantsSecurityRemoved': true,
-          'simulatedCookies': [],
-        })
-      })
-    })
-
-    it('cspNonce is set to the value stored in res.injectionNonce', function () {
-      prepareContext({
-        req: {
-          proxiedUrl: 'http://www.foobar.com:3501/primary-origin.html',
-        },
-        res: {
-          injectionNonce: 'fake-nonce',
-        },
-        simulatedCookies: [],
-      })
-
-      return testMiddleware([MaybeInjectHtml], ctx)
-      .then(() => {
-        expect(htmlStub).to.be.calledOnce
-        expect(htmlStub).to.be.calledWith('foo', {
-          'cspNonce': 'fake-nonce',
-          'deferSourceMapRewrite': undefined,
-          'domainName': 'foobar.com',
-          'isNotJavascript': true,
-          'modifyObstructiveCode': true,
-          'modifyObstructiveThirdPartyCode': true,
-          'shouldInjectDocumentDomain': true,
-          'url': 'http://www.foobar.com:3501/primary-origin.html',
-          'useAstSourceRewriting': undefined,
-          'wantsInjection': 'full',
-          'wantsSecurityRemoved': true,
-          'simulatedCookies': [],
+          return testMiddleware([MaybeInjectHtml], ctx)
+          .then(() => {
+            expect(htmlStub).to.be.calledOnce
+            expect(htmlStub).to.be.calledWith('foo', {
+              'cspNonce': 'fake-nonce',
+              'deferSourceMapRewrite': undefined,
+              'domainName': 'foobar.com',
+              'isNotJavascript': true,
+              'modifyObstructiveCode': true,
+              'modifyObstructiveThirdPartyCode': true,
+              'shouldInjectDocumentDomain': injectDocumentDomain,
+              'url': 'http://www.foobar.com:3501/primary-origin.html',
+              'useAstSourceRewriting': undefined,
+              'wantsInjection': 'full',
+              'wantsSecurityRemoved': true,
+              'simulatedCookies': [],
+            })
+          })
         })
       })
     })
 
     function prepareContext (props) {
-      const remoteStates = new RemoteStates(() => {})
       const stream = Readable.from(['foo'])
 
       // set the primary remote state
@@ -2260,7 +2249,7 @@ describe('http/response-middleware', function () {
         config: {
           modifyObstructiveCode: true,
           experimentalModifyObstructiveThirdPartyCode: true,
-          experimentalSkipDomainInjection: null,
+          injectDocumentDomain: false,
         },
         remoteStates,
         debug: (formatter, ...args) => {
@@ -2351,7 +2340,6 @@ describe('http/response-middleware', function () {
     })
 
     function prepareContext (props) {
-      const remoteStates = new RemoteStates(() => {})
       const stream = Readable.from(['foo'])
 
       // set the primary remote state
@@ -2456,7 +2444,6 @@ describe('http/response-middleware', function () {
     })
 
     function prepareContext (props) {
-      const remoteStates = new RemoteStates(() => {})
       const stream = Readable.from(['foo'])
 
       // set the primary remote state

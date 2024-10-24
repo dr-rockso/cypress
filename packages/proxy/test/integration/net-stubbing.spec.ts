@@ -11,7 +11,7 @@ import { expect } from 'chai'
 import supertest from 'supertest'
 import { allowDestroy } from '@packages/network'
 import { EventEmitter } from 'events'
-import { RemoteStates } from '@packages/server/lib/remote-states/remote_states'
+import { RemoteStates } from '@packages/server/lib/remote_states'
 import { CookieJar } from '@packages/server/lib/util/cookies'
 
 const Request = require('@packages/server/lib/request')
@@ -27,12 +27,24 @@ context('network stubbing', () => {
   let destinationPort
   let socket
 
+  const serverPort = 3030
+  const fileServerPort = 3030
+  const originKeyStrategy = (url) => new URL(url).origin
+
+  const remoteStateConfig = () => {
+    return { serverPort, fileServerPort }
+  }
+
+  const createRemoteStates = () => {
+    return new RemoteStates(remoteStateConfig, originKeyStrategy)
+  }
+
   beforeEach((done) => {
     config = {
       experimentalCspAllowList: false,
     }
 
-    remoteStates = new RemoteStates(() => {})
+    remoteStates = createRemoteStates()
     socket = new EventEmitter()
     socket.toDriver = sinon.stub()
     app = express()

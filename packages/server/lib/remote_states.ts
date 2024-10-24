@@ -2,10 +2,28 @@ import { cors, uri } from '@packages/network'
 import Debug from 'debug'
 import _ from 'lodash'
 
-const DEFAULT_DOMAIN_NAME = 'localhost'
+export const DEFAULT_DOMAIN_NAME = 'localhost'
+
 const fullyQualifiedRe = /^https?:\/\//
 
 const debug = Debug('cypress:server:remote-states')
+
+interface RemoteState {
+  auth?: {
+    username: string
+    password: string
+  }
+  domainName: string
+  strategy: 'file' | 'http'
+  origin: string
+  fileServer: string | null
+  props: Record<string, any> | null
+}
+
+interface RemoteStatesConfig {
+  serverPort: number
+  fileServerPort?: number
+}
 
 /**
  * Class to maintain and manage the remote states of the server.
@@ -42,18 +60,26 @@ const debug = Debug('cypress:server:remote-states')
  * }
  */
 export class RemoteStates {
-  private remoteStates: Map<string, Cypress.RemoteState> = new Map()
+  // Cypress.RemoteState was coming from the namespace declared in @packages/net-stubbing, somehow
+  // now it's defined (for a second time) in `./remote_states_abs.ts
+  private remoteStates: Map<string, RemoteState> = new Map()
   private primaryOriginKey: string = ''
   private currentOriginKey: string = ''
-  private configure: () => { serverPort: number, fileServerPort: number }
-  private _config: { serverPort: number, fileServerPort: number } | undefined
+  private _config?: RemoteStatesConfig
+  private _configure: () => RemoteStatesConfig
 
-  constructor (configure) {
-    this.configure = configure
+  private _determineOriginKey: (url: string) => string
+
+  constructor (
+    configure: () => { serverPort: number, fileServerPort?: number },
+    originKeyStrategy: (url: string) => string,
+  ) {
+    this._configure = configure
+    this._determineOriginKey = originKeyStrategy
   }
 
   get (url: string) {
-    const state = this.remoteStates.get(cors.getSuperDomainOrigin(url))
+    const state = this.remoteStates.get(this._determineOriginKey(url))
 
     debug('getting remote state: %o for: %s', state, url)
 
@@ -75,7 +101,7 @@ export class RemoteStates {
   }
 
   isPrimarySuperDomainOrigin (url: string): boolean {
-    return this.primaryOriginKey === cors.getSuperDomainOrigin(url)
+    return this.primaryOriginKey === this._determineOriginKey(url)
   }
 
   reset () {
@@ -92,41 +118,42 @@ export class RemoteStates {
     return this.get(this.currentOriginKey) as Cypress.RemoteState
   }
 
-  set (urlOrState: string | Cypress.RemoteState, options: { auth?: {} } = {}, isPrimarySuperDomainOrigin: boolean = true): Cypress.RemoteState {
-    let state
+  private _stateFromUrl (url: string): RemoteState {
+    const remoteOrigin = uri.origin(url)
+    const remoteProps = cors.parseUrlIntoHostProtocolDomainTldPort(remoteOrigin)
 
-    if (_.isString(urlOrState)) {
-      const remoteOrigin = uri.origin(urlOrState)
-      const remoteProps = cors.parseUrlIntoHostProtocolDomainTldPort(remoteOrigin)
-
-      if ((urlOrState === '<root>') || !fullyQualifiedRe.test(urlOrState)) {
-        state = {
-          auth: options.auth,
-          origin: `http://${DEFAULT_DOMAIN_NAME}:${this.config.serverPort}`,
-          strategy: 'file',
-          fileServer: _.compact([`http://${DEFAULT_DOMAIN_NAME}`, this.config.fileServerPort]).join(':'),
-          domainName: DEFAULT_DOMAIN_NAME,
-          props: null,
-        }
-      } else {
-        state = {
-          auth: options.auth,
-          origin: remoteOrigin,
-          strategy: 'http',
-          fileServer: null,
-          domainName: cors.getDomainNameFromParsedHost(remoteProps),
-          props: remoteProps,
-        }
+    if ((url === '<root>') || !fullyQualifiedRe.test(url)) {
+      return {
+        origin: `http://${DEFAULT_DOMAIN_NAME}:${this.config.serverPort}`,
+        strategy: 'file',
+        fileServer: _.compact([`http://${DEFAULT_DOMAIN_NAME}`, this.config.fileServerPort]).join(':'),
+        domainName: DEFAULT_DOMAIN_NAME,
+        props: null,
       }
-    } else {
-      state = urlOrState
     }
 
-    const remoteOrigin = cors.getSuperDomainOrigin(state.origin)
+    return {
+      origin: remoteOrigin,
+      strategy: 'http',
+      fileServer: null,
+      domainName: cors.getDomainNameFromParsedHost(remoteProps),
+      props: remoteProps,
+    }
+  }
+
+  set (urlOrState: string | Cypress.RemoteState, options: Pick<RemoteState, 'auth'> = { }, isPrimaryOrigin: boolean = true): RemoteState | undefined {
+    const state: RemoteState = _.isString(urlOrState) ?
+      {
+        ...this._stateFromUrl(urlOrState),
+        auth: options.auth,
+      } :
+      urlOrState
+
+    const remoteOrigin = this._determineOriginKey(state.origin)
 
     this.currentOriginKey = remoteOrigin
 
-    if (isPrimarySuperDomainOrigin) {
+    if (isPrimaryOrigin) {
       // convert map to array
       const stateArray = Array.from(this.remoteStates.entries())
 
@@ -141,12 +168,12 @@ export class RemoteStates {
 
     debug('setting remote state %o for %s', state, remoteOrigin)
 
-    return this.get(remoteOrigin) as Cypress.RemoteState
+    return this.get(remoteOrigin)
   }
 
   private get config () {
     if (!this._config) {
-      this._config = this.configure()
+      this._config = this._configure()
     }
 
     return this._config

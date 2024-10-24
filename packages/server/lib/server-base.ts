@@ -31,7 +31,7 @@ import type { Browser } from '@packages/server/lib/browsers/types'
 import { InitializeRoutes, createCommonRoutes } from './routes'
 import type { FoundSpec, ProtocolManagerShape, TestingType } from '@packages/types'
 import type { Server as WebSocketServer } from 'ws'
-import { RemoteStates } from './remote-states/remote_states'
+import { RemoteStates } from './remote_states'
 import { cookieJar, SerializableAutomationCookie } from './util/cookies'
 import { resourceTypeAndCredentialManager, ResourceTypeAndCredentialManager } from './util/resourceTypeAndCredentialManager'
 import fileServer from './file_server'
@@ -161,7 +161,7 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
   private _urlResolver: Bluebird<Record<string, any>> | null = null
   private testingType?: TestingType
 
-  constructor () {
+  constructor (config: Cfg) {
     this.isListening = false
     // @ts-ignore
     this.request = Request()
@@ -171,12 +171,15 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
     this._baseUrl = null
     this._fileServer = null
 
-    this._remoteStates = new RemoteStates(() => {
+    const configRemoteStates = () => {
       return {
         serverPort: this._port(),
         fileServerPort: this._fileServer?.port(),
       }
-    })
+    }
+    const originKeyStrategy = config.injectDocumentDomain ? cors.getSuperDomainOrigin : (url) => new URL(url).origin
+
+    this._remoteStates = new RemoteStates(configRemoteStates, originKeyStrategy)
 
     this.resourceTypeAndCredentialManager = resourceTypeAndCredentialManager
   }

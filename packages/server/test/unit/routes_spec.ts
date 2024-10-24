@@ -1,6 +1,6 @@
 import type { NetworkProxy } from '@packages/proxy'
 import type HttpProxy from 'http-proxy'
-import type { RemoteStates } from '../../lib/remote-states/remote_states'
+import type { RemoteStates } from '../../lib/remote_states'
 
 import chai, { expect } from 'chai'
 import sinon from 'sinon'
