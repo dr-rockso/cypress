@@ -6,6 +6,7 @@ import type { Configuration as WebpackDevServer5Configuration } from 'webpack-de
 import type { WebpackDevServerConfig } from './devServer'
 import type { SourceRelativeWebpackResult } from './helpers/sourceRelativeWebpackModules'
 import { makeWebpackConfig } from './makeWebpackConfig'
+import { isWebpackBundleAnalyzerEnabled } from './util'
 
 const debug = debugLib('cypress:webpack-dev-server:start')
 
@@ -84,6 +85,10 @@ function webpackDevServer5 (
     devMiddleware: {
       publicPath: devServerPublicPathRoute,
       stats: finalWebpackConfig.stats ?? 'minimal',
+      ...(isWebpackBundleAnalyzerEnabled() ? {
+        // the bundle needs to be written to disk in order to determine source map sizes
+        writeToDisk: true,
+      } : {}),
     },
     hot: false,
     // Only enable file watching & reload when executing tests in `open` mode
@@ -119,6 +124,10 @@ function webpackDevServer4 (
     devMiddleware: {
       publicPath: devServerPublicPathRoute,
       stats: finalWebpackConfig.stats ?? 'minimal',
+      ...(isWebpackBundleAnalyzerEnabled() ? {
+        // the bundle needs to be written to disk in order to determine source map sizes
+        writeToDisk: true,
+      } : {}),
     },
     hot: false,
     // Only enable file watching & reload when executing tests in `open` mode

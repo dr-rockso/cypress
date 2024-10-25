@@ -1,6 +1,14 @@
 <!-- See the ../guides/writing-the-cypress-changelog.md for details on writing the changelog. -->
 ## 13.15.1
 
+_Released 11/05/2024 (PENDING)_
+
+**Features:**
+
+- `@cypress/webpack-dev-server` now ships with [webpack-bundle-analyzer](https://www.npmjs.com/package/webpack-bundle-analyzer) as a diagnostic tool to determine bundle statistics, which can be enabled via `DEBUG=cypress-verbose:webpack-dev-server:bundle-analyzer`. Addresses [#30461](https://github.com/cypress-io/cypress/issues/30461).
+
+## 13.15.1
+
 _Released 10/24/2024_
 
 **Bugfixes:**
