@@ -375,6 +375,11 @@ describe('visual error templates', () => {
         retryingAgain: ['Retrying again...'],
       }
     },
+    FIREFOX_CDP_FAILED_TO_CONNECT: () => {
+      return {
+        default: ['Retrying...'],
+      }
+    },
     TESTS_DID_NOT_START_FAILED: () => {
       return {
         default: [],
@@ -563,11 +568,6 @@ describe('visual error templates', () => {
           parallel: true,
           autoCancelAfterFailures: 3,
         }],
-      }
-    },
-    DEPRECATED_BEFORE_BROWSER_LAUNCH_ARGS: () => {
-      return {
-        default: [],
       }
     },
     DUPLICATE_TASK_KEY: () => {

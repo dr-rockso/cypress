@@ -146,6 +146,9 @@ export const AllCypressErrors = {
   TESTS_DID_NOT_START_RETRYING: (arg1: string) => {
     return errTemplate`Timed out waiting for the browser to connect. ${fmt.off(arg1)}`
   },
+  FIREFOX_CDP_FAILED_TO_CONNECT: (arg1: string) => {
+    return errTemplate`Failed to spawn CDP with Firefox. ${fmt.off(arg1)}`
+  },
   TESTS_DID_NOT_START_FAILED: () => {
     return errTemplate`The browser never connected. Something is wrong. The tests cannot run. Aborting...`
   },
@@ -382,16 +385,6 @@ export const AllCypressErrors = {
         The first setting of --auto-cancel-after-failures for any given run takes precedent.
 
         https://on.cypress.io/auto-cancellation-mismatch`
-  },
-  DEPRECATED_BEFORE_BROWSER_LAUNCH_ARGS: () => {
-    return errTemplate`\
-      Deprecation Warning: The ${fmt.highlight(`before:browser:launch`)} plugin event changed its signature in ${fmt.cypressVersion(`4.0.0`)}
-
-      The event switched from yielding the second argument as an ${fmt.highlightSecondary(`array`)} of browser arguments to an options ${fmt.highlightSecondary(`object`)} with an ${fmt.highlightSecondary(`args`)} property.
-
-      We've detected that your code is still using the previous, deprecated interface signature.
-
-      This code will not work in a future version of Cypress. Please see the upgrade guide: https://on.cypress.io/deprecated-before-browser-launch-args`
   },
   DUPLICATE_TASK_KEY: (arg1: string[]) => {
     return errTemplate`\
@@ -1254,9 +1247,9 @@ export const AllCypressErrors = {
 
         Please remove this flag from: ${fmt.path(arg1.configFile)}
 
-        Component Testing is now a standalone command. You can now run your component tests with:
+        Component Testing is now a supported testing type. You can run your component tests with:
 
-          ${fmt.terminal(`cypress open-ct`)}
+          ${fmt.terminal(`cypress open --component`)}
 
         https://on.cypress.io/migration-guide`
   },
