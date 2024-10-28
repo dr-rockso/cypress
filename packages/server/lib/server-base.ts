@@ -160,6 +160,7 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
   private _originPolicy: Policy = 'same-origin'
   private _urlResolver: Bluebird<Record<string, any>> | null = null
   private testingType?: TestingType
+  private _config: Cfg
 
   constructor (config: Cfg) {
     this.isListening = false
@@ -170,6 +171,7 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
     this._middleware = null
     this._baseUrl = null
     this._fileServer = null
+    this._config = config
 
     const configRemoteStates = () => {
       return {
@@ -855,6 +857,7 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
 
           return runPhase(() => {
             // get the cookies that would be sent with this request so they can be rehydrated
+            // TODO: replace with logic based on config.injectDocumentDomain
             return automationRequest('get:cookies', {
               domain: cors.getSuperDomain(newUrl),
             })
@@ -900,7 +903,7 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
                 // https://github.com/cypress-io/cypress/issues/1727
                 details.isHtml = isResponseHtml(contentType, responseBuffer)
 
-                debug('resolve:url response ended, setting buffer %o', { newUrl, details })
+                debug('resolve:url response ended, setting buffer %o', { newUrl, alreadyVisited: options.hasAlreadyVisitedUrl, details })
 
                 details.totalTime = Date.now() - startTime
 
@@ -911,6 +914,13 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
                   const urlDoesNotMatchPolicy = options.hasAlreadyVisitedUrl
                     && !cors.urlMatchesPolicy({ policy: this._originPolicy, frameUrl: primaryRemoteState.origin, topUrl: newUrl || '' })
                     || options.isFromSpecBridge
+
+                  debug('urlDoesNotMatchPolicy?', {
+                    urlDoesNotMatchPolicy,
+                    hasAlreadyVisited: options.hasAlreadyVisited,
+                    corsResult: !cors.urlMatchesPolicy({ policy: this._originPolicy, frameUrl: primaryRemoteState.origin, topUrl: newUrl || '' }),
+                    isFromSpecBridge: options.isFromSpecBridge,
+                  })
 
                   if (!handlingLocalFile) {
                     this._remoteStates.set(newUrl as string, options, !urlDoesNotMatchPolicy)

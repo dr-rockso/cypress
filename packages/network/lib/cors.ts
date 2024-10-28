@@ -134,6 +134,7 @@ export function urlMatchesPolicy ({ policy, frameUrl, topUrl }: {
   frameUrl: string
   topUrl: string
 }): boolean {
+  debug('url matches policy?', { policy, frameUrl, topUrl })
   if (!policy || !frameUrl || !topUrl) {
     return false
   }
