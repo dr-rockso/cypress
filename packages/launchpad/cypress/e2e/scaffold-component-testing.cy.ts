@@ -103,7 +103,7 @@ describe('scaffolding component testing', {
         await ctx.actions.file.writeFileInProject(
           ctx.path.join('node_modules', 'react-dom', 'package.json'),
           JSON.stringify({
-            'version': '17.0.0',
+            'version': '18.3.1',
           }),
         )
       })
@@ -111,6 +111,11 @@ describe('scaffolding component testing', {
       // now it is installed, launchpad should detect it and update the UI
       cy.findByTestId('dependency-react-dom').within(() => {
         cy.get('[aria-label="installed"]').should('exist')
+      })
+
+      // now clean up the state that we mutated
+      cy.withCtx(async (ctx) => {
+        await ctx.fs.rmSync(ctx.path.join(ctx.currentProject!, 'node_modules', 'react-dom', 'package.json'))
       })
     })
   })
