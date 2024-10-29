@@ -46,12 +46,11 @@ interface StringValues {
  * @example
   ```
   {
-    experimentalFetchPolyfill: 'Polyfills `window.fetch` to enable Network spying and stubbing.'
+    experimentalRunAllSpecs: 'Enables the "Run All Specs" UI feature, allowing the execution of multiple specs sequentially'
   }
   ```
 */
 const _summaries: StringValues = {
-  experimentalFetchPolyfill: 'Polyfills `window.fetch` to enable Network spying and stubbing.',
   experimentalInteractiveRunEvents: 'Allows listening to the `before:run`, `after:run`, `before:spec`, and `after:spec` events in the plugins file during interactive mode.',
   experimentalModifyObstructiveThirdPartyCode: 'Applies `modifyObstructiveCode` to third party `.html` and `.js`, removes subresource integrity, and modifies the user agent in Electron.',
   experimentalSkipDomainInjection: 'Disables setting document.domain to the document\'s super domain on injection.',
@@ -70,12 +69,11 @@ const _summaries: StringValues = {
  * @example
   ```
   {
-    experimentalFetchPolyfill: 'Fetch polyfill'
+    experimentalRunAllSpecs: 'Run All Specs'
   }
   ```
 */
 const _names: StringValues = {
-  experimentalFetchPolyfill: 'Fetch Polyfill',
   experimentalInteractiveRunEvents: 'Interactive Mode Run Events',
   experimentalModifyObstructiveThirdPartyCode: 'Modify Obstructive Third Party Code',
   experimentalSkipDomainInjection: 'Use Default document.domain',
