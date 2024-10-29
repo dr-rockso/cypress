@@ -14,6 +14,17 @@ _Released 12/3/2024 (PENDING)_
 - We removed yielding the second argument of `before:browser:launch` as an array of browser arguments. This behavior has been deprecated since Cypress 4.0.0. Addressed in [#30460](https://github.com/cypress-io/cypress/pull/30460).
 - The `cypress open-ct` and `cypress run-ct` CLI commands were removed. Please use `cypress open --component` or `cypress run --component` respectively instead. Addressed in [#30456](https://github.com/cypress-io/cypress/pull/30456)
 - The undocumented methods `Cypress.backend('firefox:force:gc')` and `Cypress.backend('log:memory:pressure')` were removed. Addresses [#30222](https://github.com/cypress-io/cypress/issues/30222).
+- Upgraded bundled Node.js version from `18.17.0` to `20.18.0`. Addresses [#29547](https://github.com/cypress-io/cypress/issues/29547).
+- It is no longer possible to make a `fetch` or `XMLHttpRequest` request from the `about:blank` page in Electron (i.e. `cy.window().then((win) => win.fetch('<some-url>')`). You must use `cy.request` instead or perform some form of initial navigation via `cy.visit()`. Addressed in [#29547](https://github.com/cypress-io/cypress/pull/30394).
+
+**Bugfixes:**
+
+- The CSS pseudo-class `:dir()` is now supported when testing in Electron. Addresses [#29766](https://github.com/cypress-io/cypress/issues/29766).
+
+**Dependency Updates:**
+
+- Upgraded `electron` from `27.3.10` to `32.2.0`. Addresses [#29547](https://github.com/cypress-io/cypress/issues/29547).
+- Upgraded bundled Chromium version from `118.0.5993.159` to `128.0.6613.178`. Addresses [#29547](https://github.com/cypress-io/cypress/issues/29547).
 
 ## 13.15.1
 
