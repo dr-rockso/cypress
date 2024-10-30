@@ -160,9 +160,9 @@ describe('sourcemaps', () => {
       cy.get('.runnable-err-file-path', { timeout: 250 }).should('contain', `${specName}:${line}:${column}`)
     }
 
-    verifySourcemap('JsErrorSpec.cy.js', 7, 9)
+    verifySourcemap('JsErrorSpec.cy.js', 7, 8)
 
-    verifySourcemap('JsWithImportErrorSpec.cy.js', 9, 9)
+    verifySourcemap('JsWithImportErrorSpec.cy.js', 9, 8)
 
     verifySourcemap('JsxErrorSpec.cy.jsx', 7, 8)
 
