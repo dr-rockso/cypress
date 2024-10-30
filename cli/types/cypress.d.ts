@@ -70,8 +70,7 @@ declare namespace Cypress {
     strategy: 'file' | 'http'
     origin: string
     fileServer: string | null
-    props: Record<string, any>
-    visiting: string
+    props: Record<string, any> | null
   }
 
   interface Backend {

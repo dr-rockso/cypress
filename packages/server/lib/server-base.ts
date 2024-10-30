@@ -826,8 +826,8 @@ export class ServerBase<TSocket extends SocketE2E | SocketCt> {
         const state = this._remoteStates.set(urlStr, options)
 
         // TODO: Update url.resolve signature to not use deprecated methods
-        urlFile = url.resolve(state.fileServer as string, urlStr)
-        urlStr = url.resolve(state.origin as string, urlStr)
+        urlFile = state?.fileServer ? url.resolve(state.fileServer, urlStr) : url.resolve('', urlStr)
+        urlStr = state?.origin ? url.resolve(state.origin, urlStr) : url.resolve('', urlStr)
       }
 
       const onReqError = (err) => {
