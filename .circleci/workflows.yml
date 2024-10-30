@@ -574,7 +574,7 @@ commands:
       - restore_cached_workspace
       - when:
           condition:
-            - equal: [ <<parameters.browser>>, "chrome-beta" ]
+            equal: [ chrome-beta, <<parameters.browser>> ]
           steps:
             - install-chrome:
                 channel: beta
