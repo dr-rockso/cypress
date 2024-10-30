@@ -1977,6 +1977,7 @@ jobs:
     parallelism: 5
     resource_class: medium+
     parameters:
+      <<: *defaultsParameters
       browser:
         description: browser shortname to target
         type: string
@@ -2867,7 +2868,7 @@ linux-x64-workflow: &linux-x64-workflow
           - build
         matrix:
           parameters:
-            browser: ["chrome", "chrome-beta", "firefox", "electron", "webkit"]
+            browser: [chrome", chrome-beta, firefox, electron, webkit]
           
     # - driver-integration-tests-chrome:
     #     context: test-runner:cypress-record-key
