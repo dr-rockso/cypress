@@ -585,15 +585,17 @@ commands:
 
             if << parameters.inject-document-domain >> ; then
               YARN_CMD="cypress:run:inject-document-domain"
+              PARALLEL=""
             else
               YARN_CMD="cypress:run"
+              PARALLEL="--parallel --group 5x-driver-<<parameters.browser>>"
             fi
 
             if [[ -v MAIN_RECORD_KEY ]]; then
               # internal PR
               CYPRESS_RECORD_KEY=$MAIN_RECORD_KEY \
               CYPRESS_INTERNAL_ENABLE_TELEMETRY="true" \
-              yarn $YARN_CMD --record --parallel --group 5x-driver-<<parameters.browser>> --browser <<parameters.browser>> --runner-ui
+              yarn $YARN_CMD --record $PARALLEL --browser <<parameters.browser>> --runner-ui
             else
               # external PR
               TESTFILES=$(circleci tests glob "cypress/e2e/**/*.cy.*" | circleci tests split --total=$CIRCLE_NODE_TOTAL)
