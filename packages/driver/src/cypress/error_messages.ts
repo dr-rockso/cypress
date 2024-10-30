@@ -1219,8 +1219,11 @@ export default {
       message: `${cmd('origin')} requires the first argument to be either a url (\`https://www.example.com/path\`) or a domain name (\`example.com\`). Query parameters are not allowed. You passed: \`{{arg}}\``,
     },
     invalid_url_argument_same_origin ({ originUrl, topOrigin, policy }) {
+      const useSuperdomainLanguage = policy === 'same-super-domain-origin'
+      const hostnameCategory = useSuperdomainLanguage ? 'superdomain' : 'origin'
+
       return stripIndent`\
-      ${cmd('origin')} requires the first argument to be a different ${policy === 'same-origin' ? 'origin' : 'domain' } than top. You passed \`${originUrl}\` to the origin command, while top is at \`${topOrigin}\`.
+      ${useSuperdomainLanguage ? 'When `injectDocumentDomain` is configured to true, ' : ''}${cmd('origin')} requires the first argument to be a different ${hostnameCategory} than top. You passed \`${originUrl}\` to the origin command, while top is at \`${topOrigin}\`.
 
       Either the intended page was not visited prior to running the cy.origin block or the cy.origin block may not be needed at all.
       `
