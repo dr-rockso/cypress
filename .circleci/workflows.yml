@@ -2023,6 +2023,8 @@ jobs:
     steps:
       - run-driver-integration-tests:
           browser: webkit
+          # inject document domain must be true for webkit, as cy.origin is not supported
+          inject-document-domain: true
 
   run-reporter-component-tests-chrome:
     <<: *defaults
