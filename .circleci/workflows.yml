@@ -54,6 +54,7 @@ linuxArm64WorkflowFilters: &linux-arm64-workflow-filters
     # use the following branch as well to ensure that v8 snapshot cache updates are fully tested
     - equal: [ 'update-v8-snapshot-cache-on-develop', << pipeline.git.branch >> ]
     - equal: [ 'ryanm/chore/electron-upgrade', << pipeline.git.branch >> ]
+    - equal: [ 'cacie/use-matrix-for-driver-tests', << pipeline.git.branch >> ]
     - matches:
         pattern: /^release\/\d+\.\d+\.\d+$/
         value: << pipeline.git.branch >>
@@ -569,18 +570,15 @@ commands:
       browser:
         description: browser shortname to target
         type: string
-      install-chrome-channel:
-        description: chrome channel to install
-        type: string
-        default: ''
     steps:
       - restore_cached_workspace
       - when:
-          condition: <<parameters.install-chrome-channel>>
+          condition:
+            - equal: [ <<parameters.browser>>, "chrome-beta" ]
           steps:
             - install-chrome:
-                channel: <<parameters.install-chrome-channel>>
-                version: $(node ./scripts/get-browser-version.js chrome:<<parameters.install-chrome-channel>>)
+                channel: beta
+                version: $(node ./scripts/get-browser-version.js chrome:beta)
       - when:
           condition:
             equal: [ webkit, << parameters.browser >> ]
@@ -594,11 +592,17 @@ commands:
             echo Current working directory is $PWD
             echo Total containers $CIRCLE_NODE_TOTAL
 
+            if [[ "<< parameters.browser >>" == "chrome-beta" ]] ; then
+              BROWSER=chrome
+            else
+              BROWSER="<< parameters.browser >>"
+            fi
+
             if [[ -v MAIN_RECORD_KEY ]]; then
               # internal PR
               CYPRESS_RECORD_KEY=$MAIN_RECORD_KEY \
               CYPRESS_INTERNAL_ENABLE_TELEMETRY="true" \
-              yarn cypress:run --record --parallel --group 5x-driver-<<parameters.browser>> --browser <<parameters.browser>> --runner-ui
+              yarn cypress:run --record --parallel --group 5x-driver-<<parameters.browser>> --browser $BROWSER --runner-ui
             else
               # external PR
               TESTFILES=$(circleci tests glob "cypress/e2e/**/*.cy.*" | circleci tests split --total=$CIRCLE_NODE_TOTAL)
@@ -607,7 +611,7 @@ commands:
               if [[ -z "$TESTFILES" ]]; then
                 echo "Empty list of test files"
               fi
-              yarn cypress:run --browser <<parameters.browser>> --spec $TESTFILES --runner-ui
+              yarn cypress:run --browser $BROWSER --spec $TESTFILES --runner-ui
             fi
           working_directory: packages/driver
       - verify-mocha-results
@@ -1968,46 +1972,58 @@ jobs:
           package: app
           type: e2e
 
-  driver-integration-tests-chrome:
+  driver-integration-tests:
     <<: *defaults
     parallelism: 5
     resource_class: medium+
+    parameters:
+      browser:
+        description: browser shortname to target
+        type: string
     steps:
       - run-driver-integration-tests:
-          browser: chrome
-          install-chrome-channel: stable
+          browser: << parameters.browser >>
 
-  driver-integration-tests-chrome-beta:
-    <<: *defaults
-    resource_class: medium+
-    parallelism: 5
-    steps:
-      - run-driver-integration-tests:
-          browser: chrome:beta
-          install-chrome-channel: beta
+  # driver-integration-tests-chrome:
+  #   <<: *defaults
+  #   parallelism: 5
+  #   resource_class: medium+
+  #   steps:
+  #     - run-driver-integration-tests:
+  #         browser: chrome
+  #         install-chrome-channel: stable
 
-  driver-integration-tests-firefox:
-    <<: *defaults
-    resource_class: medium+
-    parallelism: 5
-    steps:
-      - run-driver-integration-tests:
-          browser: firefox
+  # driver-integration-tests-chrome-beta:
+  #   <<: *defaults
+  #   resource_class: medium+
+  #   parallelism: 5
+  #   steps:
+  #     - run-driver-integration-tests:
+  #         browser: chrome:beta
+  #         install-chrome-channel: beta
 
-  driver-integration-tests-electron:
-    <<: *defaults
-    parallelism: 5
-    steps:
-      - run-driver-integration-tests:
-          browser: electron
+  # driver-integration-tests-firefox:
+  #   <<: *defaults
+  #   resource_class: medium+
+  #   parallelism: 5
+  #   steps:
+  #     - run-driver-integration-tests:
+  #         browser: firefox
 
-  driver-integration-tests-webkit:
-    <<: *defaults
-    resource_class: large
-    parallelism: 5
-    steps:
-      - run-driver-integration-tests:
-          browser: webkit
+  # driver-integration-tests-electron:
+  #   <<: *defaults
+  #   parallelism: 5
+  #   steps:
+  #     - run-driver-integration-tests:
+  #         browser: electron
+
+  # driver-integration-tests-webkit:
+  #   <<: *defaults
+  #   resource_class: large
+  #   parallelism: 5
+  #   steps:
+  #     - run-driver-integration-tests:
+  #         browser: webkit
 
   run-reporter-component-tests-chrome:
     <<: *defaults
@@ -2793,11 +2809,7 @@ linux-x64-workflow: &linux-x64-workflow
           - run-reporter-component-tests-chrome
           - run-webpack-dev-server-integration-tests
           - run-vite-dev-server-integration-tests
-          - driver-integration-tests-firefox
-          - driver-integration-tests-chrome
-          - driver-integration-tests-chrome-beta
-          - driver-integration-tests-electron
-          - driver-integration-tests-webkit
+          - driver-integration-tests
           - driver-integration-memory-tests
     - lint-types:
         requires:
@@ -2848,26 +2860,35 @@ linux-x64-workflow: &linux-x64-workflow
         executor: non-root-docker-user
         requires:
           - system-tests-node-modules-install
-    - driver-integration-tests-chrome:
+    - driver-integration-tests:
+        name: driver-integration-tests-<< matrix.browser >>
         context: test-runner:cypress-record-key
         requires:
           - build
-    - driver-integration-tests-chrome-beta:
-        context: test-runner:cypress-record-key
-        requires:
-          - build
-    - driver-integration-tests-firefox:
-        context: test-runner:cypress-record-key
-        requires:
-          - build
-    - driver-integration-tests-electron:
-        context: test-runner:cypress-record-key
-        requires:
-          - build
-    - driver-integration-tests-webkit:
-        context: test-runner:cypress-record-key
-        requires:
-          - build
+        matrix:
+          parameters:
+            browser: [chrome, chrome-beta, firefox, electron, webkit]
+          
+    # - driver-integration-tests-chrome:
+    #     context: test-runner:cypress-record-key
+    #     requires:
+    #       - build
+    # - driver-integration-tests-chrome-beta:
+    #     context: test-runner:cypress-record-key
+    #     requires:
+    #       - build
+    # - driver-integration-tests-firefox:
+    #     context: test-runner:cypress-record-key
+    #     requires:
+    #       - build
+    # - driver-integration-tests-electron:
+    #     context: test-runner:cypress-record-key
+    #     requires:
+    #       - build
+    # - driver-integration-tests-webkit:
+    #     context: test-runner:cypress-record-key
+    #     requires:
+    #       - build
     - driver-integration-memory-tests:
         requires:
           - build
@@ -2980,11 +3001,12 @@ linux-x64-workflow: &linux-x64-workflow
           - lint-types
           - linux-lint
           - percy-finalize
-          - driver-integration-tests-firefox
-          - driver-integration-tests-chrome
-          - driver-integration-tests-chrome-beta
-          - driver-integration-tests-electron
-          - driver-integration-tests-webkit
+          - driver-integration-tests
+          # - driver-integration-tests-firefox
+          # - driver-integration-tests-chrome
+          # - driver-integration-tests-chrome-beta
+          # - driver-integration-tests-electron
+          # - driver-integration-tests-webkit
           - driver-integration-memory-tests
           - system-tests-non-root
           - system-tests-firefox
@@ -3207,26 +3229,14 @@ linux-x64-contributor-workflow: &linux-x64-contributor-workflow
         executor: non-root-docker-user
         requires:
           - system-tests-node-modules-install
-    - driver-integration-tests-chrome:
+    - driver-integration-tests:
+        name: driver-integration-tests-<< matrix.browser >>
         context: test-runner:cypress-record-key
         requires:
           - contributor-pr
-    - driver-integration-tests-chrome-beta:
-        context: test-runner:cypress-record-key
-        requires:
-          - contributor-pr
-    - driver-integration-tests-firefox:
-        context: test-runner:cypress-record-key
-        requires:
-          - contributor-pr
-    - driver-integration-tests-electron:
-        context: test-runner:cypress-record-key
-        requires:
-          - contributor-pr
-    - driver-integration-tests-webkit:
-        context: test-runner:cypress-record-key
-        requires:
-          - contributor-pr
+        matrix:
+          parameters:
+            browser: [chrome, chrome-beta, firefox, electron, webkit]
     - driver-integration-memory-tests:
         requires:
           - build
@@ -3338,11 +3348,12 @@ linux-x64-contributor-workflow: &linux-x64-contributor-workflow
           - lint-types
           - linux-lint
           - percy-finalize
-          - driver-integration-tests-firefox
-          - driver-integration-tests-chrome
-          - driver-integration-tests-chrome-beta
-          - driver-integration-tests-electron
-          - driver-integration-tests-webkit
+          - driver-integration-tests
+          # - driver-integration-tests-firefox
+          # - driver-integration-tests-chrome
+          # - driver-integration-tests-chrome-beta
+          # - driver-integration-tests-electron
+          # - driver-integration-tests-webkit
           - driver-integration-memory-tests
           - system-tests-non-root
           - system-tests-firefox
