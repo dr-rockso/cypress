@@ -2867,7 +2867,7 @@ linux-x64-workflow: &linux-x64-workflow
           - build
         matrix:
           parameters:
-            browser: [chrome, chrome-beta, firefox, electron, webkit]
+            browser: ["chrome", "chrome-beta", "firefox", "electron", "webkit"]
           
     # - driver-integration-tests-chrome:
     #     context: test-runner:cypress-record-key
@@ -3236,7 +3236,7 @@ linux-x64-contributor-workflow: &linux-x64-contributor-workflow
           - contributor-pr
         matrix:
           parameters:
-            browser: [chrome, chrome-beta, firefox, electron, webkit]
+            browser: ["chrome", "chrome-beta", "firefox", "electron", "webkit"]
     - driver-integration-memory-tests:
         requires:
           - build
