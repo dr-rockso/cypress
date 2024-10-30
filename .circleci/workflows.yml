@@ -582,10 +582,11 @@ commands:
             echo Current working directory is $PWD
             echo Total containers $CIRCLE_NODE_TOTAL
 
+
             if << parameters.inject-document-domain >> ; then
-              YARN_CMD="cypress:run"
-            else
               YARN_CMD="cypress:run:inject-document-domain"
+            else
+              YARN_CMD="cypress:run"
             fi
 
             if [[ -v MAIN_RECORD_KEY ]]; then
