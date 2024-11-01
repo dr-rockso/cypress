@@ -31,6 +31,7 @@ mainBuildFilters: &mainBuildFilters
         # use the following branch as well to ensure that v8 snapshot cache updates are fully tested
         - 'update-v8-snapshot-cache-on-develop'
         - 'misc/remove_marionette_for_geckodriver'
+        - 'cacie/upgrade-mobx-6'
         - 'publish-binary'
 
 # usually we don't build Mac app - it takes a long time
