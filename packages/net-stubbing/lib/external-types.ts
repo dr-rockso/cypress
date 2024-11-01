@@ -144,6 +144,7 @@ export namespace CyHttpMessages {
     httpVersion: string
     /**
      * The resource type that is being requested, according to the browser.
+     * @deprecated the resource types may change or be completely removed in a future version of Cypress
      */
     resourceType: ResourceType
     /**
