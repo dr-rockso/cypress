@@ -26,6 +26,9 @@ describe('network stubbing', { retries: 15 }, function () {
 
   beforeEach(function () {
     cy.spy(Cypress.utils, 'warning')
+    // Starting in Electron 28, we cannot use fetch or XHR from within about:blank. This is a workaround
+    // to ensure that we have a valid origin for our tests.
+    cy.visit('/fixtures/empty.html')
   })
 
   context('cy.intercept()', function () {
@@ -1690,23 +1693,6 @@ describe('network stubbing', { retries: 15 }, function () {
           expect(responseText).to.eq(payload)
 
           done()
-        })
-      })
-    })
-
-    // TODO: fix flaky test https://github.com/cypress-io/cypress/issues/23404
-    it('can delay with deprecated delayMs param', { retries: 15 }, function () {
-      const delayMs = 250
-
-      cy.intercept('/timeout*', (req) => {
-        this.start = Date.now()
-
-        req.reply({
-          delayMs,
-        })
-      }).then(() => {
-        return $.get('/timeout').then((responseText) => {
-          expect(Date.now() - this.start).to.be.closeTo(delayMs + 100, 100)
         })
       })
     })

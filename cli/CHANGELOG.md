@@ -7,10 +7,32 @@ _Released 12/3/2024 (PENDING)_
 
 - Removed support for Node.js 16 and Node.js 21. Addresses [#29930](https://github.com/cypress-io/cypress/issues/29930).
 - Prebuilt binaries for Linux are no longer compatible with Linux distributions based on glibc <2.28, for example: Ubuntu 14-18, RHEL 7, CentOS 7, Amazon Linux 2. Addresses [#29601](https://github.com/cypress-io/cypress/issues/29601).
+- The `delayMs` option of `cy.intercept()` has been removed. This option was deprecated in Cypress 6.4.0. Please use the `delay` option instead. Addressed in [#30463](https://github.com/cypress-io/cypress/pull/30463).
 - The `experimentalFetchPolyfill` configuration option was removed. This option was deprecated in Cypress 6.0.0. We recommend using `cy.intercept()` for handling fetch requests. Addressed in [#30466](https://github.com/cypress-io/cypress/pull/30466).
 - We removed yielding the second argument of `before:browser:launch` as an array of browser arguments. This behavior has been deprecated since Cypress 4.0.0. Addressed in [#30460](https://github.com/cypress-io/cypress/pull/30460).
 - The `cypress open-ct` and `cypress run-ct` CLI commands were removed. Please use `cypress open --component` or `cypress run --component` respectively instead. Addressed in [#30456](https://github.com/cypress-io/cypress/pull/30456)
 - The undocumented methods `Cypress.backend('firefox:force:gc')` and `Cypress.backend('log:memory:pressure')` were removed. Addresses [#30222](https://github.com/cypress-io/cypress/issues/30222).
+- Upgraded bundled Node.js version from `18.17.0` to `20.18.0`. Addresses [#29547](https://github.com/cypress-io/cypress/issues/29547).
+- It is no longer possible to make a `fetch` or `XMLHttpRequest` request from the `about:blank` page in Electron (i.e. `cy.window().then((win) => win.fetch('<some-url>')`). You must use `cy.request` instead or perform some form of initial navigation via `cy.visit()`. Addressed in [#29547](https://github.com/cypress-io/cypress/pull/30394).
+- `@cypress/webpack-dev-server` no longer supports `webpack-dev-server` version 3. Additionally, `@cypress/webpack-dev-server` now ships with `webpack-dev-server` version 5 by default. `webpack-dev-server` version 4 will need to be installed along side Cypress if you are still using `webpack` version 4. Addresses [#29308](https://github.com/cypress-io/cypress/issues/29308), [#30347](https://github.com/cypress-io/cypress/issues/30347), and [#30141](https://github.com/cypress-io/cypress/issues/30141).
+
+**Bugfixes:**
+
+- The CSS pseudo-class `:dir()` is now supported when testing in Electron. Addresses [#29766](https://github.com/cypress-io/cypress/issues/29766).
+
+**Dependency Updates:**
+
+- Upgraded `electron` from `27.3.10` to `32.2.0`. Addresses [#29547](https://github.com/cypress-io/cypress/issues/29547).
+- Upgraded bundled Chromium version from `118.0.5993.159` to `128.0.6613.178`. Addresses [#29547](https://github.com/cypress-io/cypress/issues/29547).
+
+
+## 13.15.2
+
+_Released 11/5/2024 (PENDING)_
+
+**Dependency Updates:**
+
+- Updated `@cypress/request` from `3.0.4` to `3.0.6`. Addressed in [#30488](https://github.com/cypress-io/cypress/pull/30488).
 
 **Dependency Updates:**
 
