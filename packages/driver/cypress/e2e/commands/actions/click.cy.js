@@ -54,6 +54,10 @@ describe('src/cy/commands/actions/click', () => {
   })
 
   context('#click', () => {
+    it('fails', () => {
+      expect(true).to.be.false
+    })
+
     it('receives native click event', (done) => {
       const $btn = cy.$$('#button')
 
