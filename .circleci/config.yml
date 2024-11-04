@@ -55,8 +55,6 @@ jobs:
       - checkout
       - continuation/continue:
           configuration_path: .circleci/workflows.yml
-          parameters: |
-            {  "targetBranch" : "$GITHUB_PR_BASE_BRANCH" }
 
 workflows:
   # the setup-workflow workflow is always triggered.
