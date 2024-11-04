@@ -52,12 +52,11 @@ jobs:
 
             echo "Skipping CI; branch in progress - $TRIGGER_INSTRUCTIONS"
             cancel_build
-
+      - checkout
       - continuation/continue:
           configuration_path: .circleci/workflows.yml
           parameters: |
             {  "targetBranch" : "$GITHUB_PR_BASE_BRANCH" }
-          checkout: true
 
 workflows:
   # the setup-workflow workflow is always triggered.
